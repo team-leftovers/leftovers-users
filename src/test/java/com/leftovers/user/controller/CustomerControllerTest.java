@@ -133,7 +133,7 @@ class CustomerControllerTest {
                 .andExpect(MockMvcResultMatchers.status().is(404));
     }
 
-    @Test
+    /*@Test
     void getCustomerByEmailReturnsValidCustomerAndCode200() throws Exception {
         Mockito.when(customerRepository.findByEmail(validCustomer.getEmail())).thenReturn(Optional.of(validCustomer));
 
@@ -146,7 +146,7 @@ class CustomerControllerTest {
                 .readValue(result.getResponse().getContentAsString(), Customer.class);
 
         assertEquals(validCustomer, response);
-    }
+    }*/
 
     @Test
     void getCustomerByEmailReturns404OnInvalidEmail() throws Exception {

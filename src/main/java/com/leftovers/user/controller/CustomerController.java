@@ -37,7 +37,6 @@ public class CustomerController {
     @GetMapping(value = "/{customerId}", produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<Customer> getCustomerById(@PathVariable Long customerId) {
         return ResponseEntity.of(customerRepository.findById(customerId));
-        //return ResponseEntity.of(Optional.ofNullable(customerService.getCustomerById(customerId)))
     }
 
     @GetMapping(value = "/email/{email}", produces = {MediaType.APPLICATION_JSON_VALUE})
