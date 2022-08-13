@@ -47,10 +47,17 @@ public class CustomerController {
     @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<Customer> createNewCustomer(@Valid @RequestBody CreateCustomerDto customerDto) {
         // Verify email isn't already registered
-        customerRepository.findByEmail(customerDto.email)
-                .ifPresent(c -> {
-                    throw new RuntimeException("Email is already registered");
-                });
+        try {
+            customerRepository.findByEmail(customerDto.email)
+                    .ifPresent(c -> {
+                        throw new RuntimeException("Email is already registered");
+                    });
+        } catch (RuntimeException ex) {
+            // TODO(Jordan):
+            //  Change return type of methods that can fail with a DTO containing an optional error field
+            //  for better error handling
+            return ResponseEntity.badRequest().build();
+        }
 
         var address = new Address();
 
@@ -94,10 +101,12 @@ public class CustomerController {
 
     @DeleteMapping("/{customerId}")
     public ResponseEntity<String> deleteCustomer(@PathVariable Long customerId) {
-        customerRepository.findById(customerId).ifPresent(c -> {
-            customerRepository.delete(c);
-            addressRepository.delete(c.getAddress());
-        });
-        return ResponseEntity.noContent().build();
+        var customer = customerRepository.findById(customerId);
+        if (customer.isPresent()) {
+            customerRepository.delete(customer.get());
+            addressRepository.delete(customer.get().getAddress());
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.notFound().build();
     }
 }
