@@ -2,20 +2,17 @@ package com.leftovers.user.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.leftovers.user.dto.CreateCustomerDto;
+import com.leftovers.user.dto.UpdateCustomerDto;
 import com.leftovers.user.model.Address;
 import com.leftovers.user.model.Customer;
-import com.leftovers.user.repository.AddressRepository;
-import com.leftovers.user.repository.CustomerRepository;
+import com.leftovers.user.services.CustomerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MockMvcBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -24,72 +21,88 @@ import javax.validation.Validation;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.boot.test.context.SpringBootTest.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 
 @Profile("test")
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 class CustomerControllerTest {
 
-    private final CustomerRepository customerRepository = Mockito.mock(CustomerRepository.class);
-    private final AddressRepository addressRepository = Mockito.mock(AddressRepository.class);
-    private final CustomerController controller = new CustomerController(customerRepository, addressRepository);
+    private final CustomerService customerService = Mockito.mock(CustomerService.class);
+    private final CustomerController controller = new CustomerController(customerService);
 
     private final ObjectMapper jsonMapper = new ObjectMapper();
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)
             .build();
 
     private Customer validCustomer;
-    private CreateCustomerDto validDto;
+    private Customer validUpdatedCustomer;
+    private CreateCustomerDto validCreateDto;
+    private UpdateCustomerDto validUpdateDto;
 
     @BeforeEach
     void setUp() {
-        Mockito.reset(customerRepository, addressRepository);
+        Mockito.reset(customerService);
 
-        validCustomer = new Customer();
+        var address = Address.builder()
+                .id(1L)
+                .latitude(0.0)
+                .longitude(0.0)
+                .zipCode("12345")
+                .city("Test City")
+                .state("TS")
+                .country("US")
+                .streetAddress("123 Test Lane")
+                .unitNumber("456")
+                .build();
 
-        validCustomer.setId(1L);
-        validCustomer.setFirstName("Test");
-        validCustomer.setLastName("Case");
-        validCustomer.setEmail("test.case@example.com");
-        validCustomer.setPhoneNo("1234567890");
-        validCustomer.setHashedPassword("this is a test password");
+        validCustomer = Customer.builder()
+                .id(1L)
+                .firstName("Test")
+                .lastName("Case")
+                .email("test.case@example.com")
+                .phoneNo("1234567890")
+                .password("this is a test password")
+                .address(address)
+                .build();
 
-        Address address = new Address();
-        address.setId(1L);
-        address.setLatitude(0.0);
-        address.setLongitude(0.0);
-        address.setZipCode(12345);
-        address.setCountry("US");
-        address.setStreetAddress("Test Lane");
-        address.setHouseNumber("123");
-        address.setUnitNumber("456");
+        validUpdatedCustomer = Customer.builder()
+                .id(validCustomer.getId())
+                .firstName(validCustomer.getFirstName())
+                .lastName(validCustomer.getLastName())
+                .email("test.case@test.com")
+                .phoneNo(validCustomer.getPhoneNo())
+                .password(validCustomer.getPassword())
+                .address(address)
+                .build();
 
-        validCustomer.setAddress(address);
+        validCreateDto = CreateCustomerDto.builder()
+                .firstName(validCustomer.getFirstName())
+                .lastName(validCustomer.getLastName())
+                .email(validCustomer.getEmail())
+                .password(validCustomer.getPassword())
+                .phoneNo(validCustomer.getPhoneNo())
+                .addressLine(address.getStreetAddress())
+                .unitNumber(address.getUnitNumber())
+                .city(address.getCity())
+                .state(address.getState())
+                .zipcode(address.getZipCode().toString())
+                .build();
 
-        validDto = new CreateCustomerDto();
-        validDto.firstName = validCustomer.getFirstName();
-        validDto.lastName = validCustomer.getLastName();
-        validDto.email = validCustomer.getEmail();
-        validDto.password = validCustomer.getHashedPassword();
-        validDto.phoneNo = validCustomer.getPhoneNo();
-        validDto.addressLine = address.getStreetAddress();
-        validDto.houseNumber = address.getHouseNumber();
-        validDto.unitNumber = address.getUnitNumber();
-        validDto.city = "Test City";
-        validDto.state = "TS";
-        validDto.zipcode = address.getZipCode().toString();
+        validUpdateDto = UpdateCustomerDto.builder()
+                .email(validUpdatedCustomer.getEmail())
+                .build();
     }
 
     @Test
     void getAllCustomersReturnsListAndCode200() throws Exception {
-        Mockito.when(customerRepository.findAll()).thenReturn(List.of(validCustomer));
+        Mockito.when(customerService.getAllCustomers()).thenReturn(List.of(validCustomer));
 
         var result = mvc
-                .perform(MockMvcRequestBuilders.get("/customer"))
+                .perform(MockMvcRequestBuilders.get("/customers"))
                 .andExpect(MockMvcResultMatchers.status().is(200))
                 .andReturn();
 
@@ -102,19 +115,19 @@ class CustomerControllerTest {
 
     @Test
     void getAllCustomersReturnsEmptyListAndCode204() throws Exception {
-        Mockito.when(customerRepository.findAll()).thenReturn(Collections.emptyList());
+        Mockito.when(customerService.getAllCustomers()).thenReturn(Collections.emptyList());
 
         mvc
-                .perform(MockMvcRequestBuilders.get("/customer"))
+                .perform(MockMvcRequestBuilders.get("/customers"))
                 .andExpect(MockMvcResultMatchers.status().is(204));
     }
 
     @Test
     void getCustomerByIdReturnsValidCustomerAndCode200() throws Exception {
-        Mockito.when(customerRepository.findById(validCustomer.getId())).thenReturn(Optional.of(validCustomer));
+        Mockito.when(customerService.getCustomerById(validCustomer.getId())).thenReturn(validCustomer);
 
         var result = mvc
-                .perform(MockMvcRequestBuilders.get("/customer/" + validCustomer.getId()))
+                .perform(MockMvcRequestBuilders.get("/customers/" + validCustomer.getId()))
                 .andExpect(MockMvcResultMatchers.status().is(200))
                 .andReturn();
 
@@ -126,19 +139,19 @@ class CustomerControllerTest {
 
     @Test
     void getCustomerByIdReturns404OnInvalidId() throws Exception {
-        Mockito.when(customerRepository.findById(20L)).thenReturn(Optional.empty());
+        Mockito.when(customerService.getCustomerById(20L)).thenReturn(null);
 
         mvc
-                .perform(MockMvcRequestBuilders.get("/customer/20"))
+                .perform(MockMvcRequestBuilders.get("/customers/20"))
                 .andExpect(MockMvcResultMatchers.status().is(404));
     }
 
-    /*@Test
+    @Test
     void getCustomerByEmailReturnsValidCustomerAndCode200() throws Exception {
-        Mockito.when(customerRepository.findByEmail(validCustomer.getEmail())).thenReturn(Optional.of(validCustomer));
+        Mockito.when(customerService.getCustomerByEmail(validCustomer.getEmail())).thenReturn(validCustomer);
 
         var result = mvc
-                .perform(MockMvcRequestBuilders.get("/customer/email/" + validCustomer.getEmail()))
+                .perform(MockMvcRequestBuilders.get("/customers/email/" + validCustomer.getEmail()))
                 .andExpect(MockMvcResultMatchers.status().is(200))
                 .andReturn();
 
@@ -146,28 +159,45 @@ class CustomerControllerTest {
                 .readValue(result.getResponse().getContentAsString(), Customer.class);
 
         assertEquals(validCustomer, response);
-    }*/
+    }
 
     @Test
     void getCustomerByEmailReturns404OnInvalidEmail() throws Exception {
-        Mockito.when(customerRepository.findByEmail("fake@email.com")).thenReturn(Optional.empty());
+        Mockito.when(customerService.getCustomerByEmail("fake@email.com")).thenReturn(null);
 
         mvc
-                .perform(MockMvcRequestBuilders.get("/customer/email/fake@email.com"))
+                .perform(MockMvcRequestBuilders.get("/customers/email/fake@email.com"))
                 .andExpect(MockMvcResultMatchers.status().is(404));
     }
 
     @Test
     void createNewCustomerReturnsCreatedIdAndCode201OnValidDto() throws Exception {
-        Mockito.when(customerRepository.save(Mockito.any(Customer.class))).thenReturn(validCustomer);
+        Mockito.when(customerService.createNewCustomer(validCreateDto)).thenReturn(validCustomer);
 
         mvc
                 .perform(
-                        MockMvcRequestBuilders.post("/customer")
+                        MockMvcRequestBuilders.post("/customers")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(jsonMapper.writeValueAsString(validDto)))
+                                .content(jsonMapper.writeValueAsString(validCreateDto)))
                 .andExpect(MockMvcResultMatchers.status().is(201))
-                .andExpect(MockMvcResultMatchers.header().string("Location", "/customer/" + validCustomer.getId()));
+                .andExpect(MockMvcResultMatchers.header().string("Location", "/customers/" + validCustomer.getId()));
+    }
+
+    @Test
+    void updateCustomerReturnsUpdatedCustomerAndCode200OnValidDto() throws Exception {
+        Mockito.when(customerService.updateCustomerAtId(validCustomer.getId(), validUpdateDto)).thenReturn(validUpdatedCustomer);
+
+        var result = mvc
+                .perform(
+                        MockMvcRequestBuilders.put("/customers/" + validCustomer.getId())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(jsonMapper.writeValueAsString(validUpdateDto)))
+                .andExpect(MockMvcResultMatchers.status().is(200))
+                .andReturn();
+
+        var customer = jsonMapper.readValue(result.getResponse().getContentAsString(), Customer.class);
+
+        assertEquals(validUpdatedCustomer, customer);
     }
 
     boolean noValidationViolations(CreateCustomerDto createCustomerDto)
@@ -180,104 +210,104 @@ class CustomerControllerTest {
 
     @Test
     void createNewCustomerDisallowsInvalidFirstName() {
-        validDto.firstName = null;
-        assertFalse(noValidationViolations(validDto));
+        validCreateDto.setFirstName(null);
+        assertFalse(noValidationViolations(validCreateDto));
 
-        validDto.firstName = "";
-        assertFalse(noValidationViolations(validDto));
+        validCreateDto.setFirstName("");
+        assertFalse(noValidationViolations(validCreateDto));
     }
 
     @Test
     void createNewCustomerDisallowsInvalidLastName() {
-        validDto.lastName = null;
-        assertFalse(noValidationViolations(validDto));
+        validCreateDto.setLastName(null);
+        assertFalse(noValidationViolations(validCreateDto));
 
-        validDto.lastName = "";
-        assertFalse(noValidationViolations(validDto));
+        validCreateDto.setLastName("");
+        assertFalse(noValidationViolations(validCreateDto));
     }
 
     @Test
     void createNewCustomerDisallowsInvalidEmail() {
-        validDto.email = null;
-        assertFalse(noValidationViolations(validDto));
+        validCreateDto.setEmail(null);
+        assertFalse(noValidationViolations(validCreateDto));
 
-        validDto.email = "";
-        assertFalse(noValidationViolations(validDto));
+        validCreateDto.setEmail("");
+        assertFalse(noValidationViolations(validCreateDto));
     }
 
     @Test
     void createNewCustomerDisallowsInvalidPassword() {
-        validDto.password = null;
-        assertFalse(noValidationViolations(validDto));
+        validCreateDto.setPassword(null);
+        assertFalse(noValidationViolations(validCreateDto));
 
-        validDto.password = "";
-        assertFalse(noValidationViolations(validDto));
+        validCreateDto.setPassword("");
+        assertFalse(noValidationViolations(validCreateDto));
 
-        validDto.password = "short";
-        assertFalse(noValidationViolations(validDto));
+        validCreateDto.setPassword("short");
+        assertFalse(noValidationViolations(validCreateDto));
 
-        validDto.password = new String(new char[129]).replace('\0', '.');
-        assertFalse(noValidationViolations(validDto));
+        validCreateDto.setPassword(new String(new char[129]).replace('\0', '.'));
+        assertFalse(noValidationViolations(validCreateDto));
     }
 
     @Test
     void createNewCustomerDisallowsInvalidPhoneNo() {
-        validDto.phoneNo = null;
-        assertFalse(noValidationViolations(validDto));
+        validCreateDto.setPhoneNo(null);
+        assertFalse(noValidationViolations(validCreateDto));
 
-        validDto.phoneNo = "";
-        assertFalse(noValidationViolations(validDto));
+        validCreateDto.setPhoneNo("");
+        assertFalse(noValidationViolations(validCreateDto));
 
-        validDto.phoneNo = "Invalid";
-        assertFalse(noValidationViolations(validDto));
+        validCreateDto.setPhoneNo("Invalid");
+        assertFalse(noValidationViolations(validCreateDto));
     }
 
     @Test
     void createNewCustomerDisallowsInvalidAddress() {
-        validDto.addressLine = null;
-        assertFalse(noValidationViolations(validDto));
+        validCreateDto.setAddressLine(null);
+        assertFalse(noValidationViolations(validCreateDto));
 
-        validDto.addressLine = "";
-        assertFalse(noValidationViolations(validDto));
+        validCreateDto.setAddressLine("");
+        assertFalse(noValidationViolations(validCreateDto));
     }
 
     @Test
     void createNewCustomerDisallowsInvalidCity() {
-        validDto.city = null;
-        assertFalse(noValidationViolations(validDto));
+        validCreateDto.setCity(null);
+        assertFalse(noValidationViolations(validCreateDto));
 
-        validDto.city = "";
-        assertFalse(noValidationViolations(validDto));
+        validCreateDto.setCity("");
+        assertFalse(noValidationViolations(validCreateDto));
     }
 
     @Test
     void createNewCustomerDisallowsInvalidState() {
-        validDto.state = null;
-        assertFalse(noValidationViolations(validDto));
+        validCreateDto.setState(null);
+        assertFalse(noValidationViolations(validCreateDto));
 
-        validDto.state = "";
-        assertFalse(noValidationViolations(validDto));
+        validCreateDto.setState("");
+        assertFalse(noValidationViolations(validCreateDto));
 
-        validDto.state = "Long";
-        assertFalse(noValidationViolations(validDto));
+        validCreateDto.setState("Long");
+        assertFalse(noValidationViolations(validCreateDto));
     }
 
     @Test
     void createNewCustomerDisallowsInvalidZipcode() {
-        validDto.zipcode = null;
-        assertFalse(noValidationViolations(validDto));
+        validCreateDto.setZipcode(null);
+        assertFalse(noValidationViolations(validCreateDto));
 
-        validDto.zipcode = "";
-        assertFalse(noValidationViolations(validDto));
+        validCreateDto.setZipcode("");
+        assertFalse(noValidationViolations(validCreateDto));
 
-        validDto.zipcode = "Hello";
-        assertFalse(noValidationViolations(validDto));
+        validCreateDto.setZipcode("Hello");
+        assertFalse(noValidationViolations(validCreateDto));
     }
 
     @Test
     void deleteCustomerReturnsCode204() throws Exception {
         mvc
-                .perform(MockMvcRequestBuilders.delete("/customer/" + validCustomer.getId()))
+                .perform(MockMvcRequestBuilders.delete("/customers/" + validCustomer.getId()))
                 .andExpect(MockMvcResultMatchers.status().is(204));
     }
 }
