@@ -52,7 +52,7 @@ public class CustomerService {
                 .latitude(0.0)
                 .longitude(0.0)
 
-                .zipCode(customerDto.getZipcode())
+                .zipcode(customerDto.getZipcode())
 
                 // TODO(Jordan):
                 //  Right now we only support The US
@@ -88,7 +88,7 @@ public class CustomerService {
         runIfNotNull(customerDto.getUnitNumber(), customer.getAddress()::setUnitNumber);
         runIfNotNull(customerDto.getCity(), customer.getAddress()::setCity);
         runIfNotNull(customerDto.getState(), customer.getAddress()::setState);
-        runIfNotNull(customerDto.getZipcode(), customer.getAddress()::setZipCode);
+        runIfNotNull(customerDto.getZipcode(), customer.getAddress()::setZipcode);
 
         customer.setAddress(addressRepository.save(customer.getAddress()));
         return customerRepository.save(customer);
