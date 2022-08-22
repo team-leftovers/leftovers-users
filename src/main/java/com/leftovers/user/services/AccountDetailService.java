@@ -27,7 +27,7 @@ public class AccountDetailService implements UserDetailsService {
         return User
                 .withUsername(account.getEmail())
                 .password(passwordEncoder.encode(account.getPassword()))
-                .authorities(account.getType().name())
+                .roles(account.getType().name())
                 .build();
     }
 }
