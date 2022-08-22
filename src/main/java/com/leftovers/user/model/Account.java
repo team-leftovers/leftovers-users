@@ -2,6 +2,7 @@ package com.leftovers.user.model;
 
 import com.leftovers.user.converter.AccountTypeAttributeConverter;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.Hibernate;
 
 import javax.persistence.*;
@@ -12,6 +13,7 @@ import java.util.Objects;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
+@SuperBuilder
 @Entity
 @Table(name = "tbl_account")
 @Inheritance(strategy = InheritanceType.JOINED)
