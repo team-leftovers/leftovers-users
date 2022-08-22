@@ -35,6 +35,16 @@ Currently, the Microservice only contains endpoints for creating, querying, and 
 - Returns code 404 on failure to find the customer
 - Returns code 400 when passing an invalid id or invalid JSON body.
 
+## `/login`
+### GET:
+- Displays a login form page where you must enter the email and password of a valid account you want to login to
+- Any attempts to access an endpoint before logging in will attempt to redirect you to this page
+- Once authorized, you will be remembered for the rest of your session
+
+## `/logout`
+### GET:
+- Displays a logout confirmation page with a single button, pressing it will log you out, deleting any cookies and invalidating your session
+
 Customer JSON:
 ```json
 {
