@@ -1,5 +1,6 @@
 package com.leftovers.user.services;
 
+import com.leftovers.user.exception.NoSuchAccountException;
 import com.leftovers.user.model.Account;
 import com.leftovers.user.repository.AccountRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,18 +17,22 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Service
 public class AccountDetailService implements UserDetailsService {
-    private final AccountRepository accountRepository;
+    private final AccountService accountService;
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        final Account account = accountRepository.findByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException(username));
+        try {
+            final Account account = accountService.getAccountByEmail(username);
 
-        return User
-                .withUsername(account.getEmail())
-                .password(passwordEncoder.encode(account.getPassword()))
-                .roles(account.getType().name())
-                .build();
+            return User
+                    .withUsername(account.getEmail())
+                    .password(passwordEncoder.encode(account.getPassword()))
+                    .roles(account.getType().name())
+                    .build();
+        }
+        catch (NoSuchAccountException ex) {
+            throw new UsernameNotFoundException(username);
+        }
     }
 }
