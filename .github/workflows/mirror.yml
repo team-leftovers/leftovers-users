@@ -19,3 +19,5 @@ jobs:
           source_branch: refs/remote/source/*
           destination_repo: ${{ secrets.WORK_REMOTE }}
           destination_branch: refs/heads/*
+          source_ssh_private_key: ${{ secrets.SOURCE_SSH_PRIVATE_KEY }}
+          destination_ssh_private_key: ${{ secrets.DESTINATION_SSH_PRIVATE_KEY }}
