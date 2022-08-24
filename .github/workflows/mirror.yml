@@ -19,4 +19,5 @@ jobs:
       - name: Push to remote
         run: |
           git remote set-url origin $WORK_REMOTE
-          git push -u origin --all --force
+          git pull
+          git push -u origin --all
