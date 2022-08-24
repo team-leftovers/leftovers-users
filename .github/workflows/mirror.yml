@@ -16,17 +16,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
-      - name: Fetch all changes
-        run: git fetch --all
-        
-      - name: Pull all changes
-        run: git pull --all
-      
-      - name: Setup new Remote
-        run: git remote add work $WORK_REMOTE
-        
-      - name: Pull from Remote
-        run: git pull --all
-        
-      - name: Push to Remote
-        run: git push -u work --all
+      - name: Fetch/Pull/Push
+        run: |
+          git fetch --all
+          git pull --all
+          git remote add work $WORK_REMOTE
+          git pull --all
+          git push -u work --all
