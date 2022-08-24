@@ -18,5 +18,5 @@ jobs:
       
       - name: Push to remote
         run: |
-          git remote add work $WORK_REMOTE
-          git push -u work --all
+          git remote set-url origin $WORK_REMOTE
+          git push -u work --all --force
