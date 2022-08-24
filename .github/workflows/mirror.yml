@@ -1,6 +1,4 @@
 name: Mirror to Work Remote
-env:
-  WORK_REMOTE: ${{ secrets.WORK_REMOTE }}
 on:
   push:
     branches:
@@ -14,10 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - uses: actions/checkout@v3
-      
-      - name: Fetch/Pull/Push
-        run: |
-          git remote add work $WORK_REMOTE
-          git pull work master --no-rebase
-          git push -u work --all
+      - name: git-sync
+        uses: wei/git-sync@v3
+        with:
+          source_repo: team-leftovers/leftovers-users
+          source_branch: refs/remote/source/*
+          destination_repo: ${{ secrets.WORK_REMOTE }}
+          destination_branch: refs/heads/*
