@@ -16,8 +16,14 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
-      - name: Push to remote
-        run: |
-          git remote set-url origin $WORK_REMOTE
-          git pull
-          git push -u origin --all
+      - name: Fetch all changes
+        run: git fetch --all
+        
+      - name: Pull all changes
+        run: git pull --all
+      
+      - name: Setup new Remote
+        run: git remote add work $WORK_REMOTE
+        
+      - name: Push to Remote
+        run: git push -u work --all
