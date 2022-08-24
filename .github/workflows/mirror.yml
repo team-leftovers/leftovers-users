@@ -1,0 +1,22 @@
+name: Mirror to Work Remote
+env:
+  WORK_REMOTE: ${{ secrets.WORK_REMOTE }}
+on:
+  push:
+    branches:
+      - development
+      - main
+      
+  workflow_dispatch:
+  
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Push to remote
+        run: |
+          git remote add work $WORK_REMOTE
+          git push -u work --all
