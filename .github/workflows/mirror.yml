@@ -18,8 +18,6 @@ jobs:
       
       - name: Fetch/Pull/Push
         run: |
-          git fetch --all
-          git pull --all
           git remote add work $WORK_REMOTE
-          git pull --all
+          git pull --no-rebase
           git push -u work --all
