@@ -26,7 +26,7 @@ jobs:
         run: git remote add work $WORK_REMOTE
         
       - name: Pull from Remote
-        run: git pull work --all --allow-unrelated-histories
+        run: git pull work --all
         
       - name: Push to Remote
         run: git push -u work --all
