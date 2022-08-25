@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.net.URI;
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -37,7 +36,7 @@ public class CustomerController {
     @PreAuthorize("hasRole('ROLE_SITE_ADMIN') || @authorizationService.isCustomer(authentication, #customerId)")
     @RequestMapping(value = "/{customerId}", produces = {MediaType.APPLICATION_JSON_VALUE}, method = RequestMethod.GET)
     public ResponseEntity<Customer> getCustomerById(@PathVariable Long customerId) {
-        return ResponseEntity.of(Optional.ofNullable(customerService.getCustomerById(customerId)));
+        return ResponseEntity.ok(customerService.getCustomerById(customerId));
     }
 
     @PreAuthorize("hasRole('ROLE_SITE_ADMIN') || @authorizationService.isCustomer(authentication, #customerId)")
@@ -50,7 +49,7 @@ public class CustomerController {
     @PreAuthorize("hasRole('ROLE_SITE_ADMIN') || @authorizationService.isCustomer(authentication, #email)")
     @RequestMapping(value = "/email/{email}", produces = {MediaType.APPLICATION_JSON_VALUE}, method = RequestMethod.GET)
     public ResponseEntity<Customer> getCustomerByEmail(@PathVariable String email) {
-        return ResponseEntity.of(Optional.ofNullable(customerService.getCustomerByEmail(email)));
+        return ResponseEntity.ok(customerService.getCustomerByEmail(email));
     }
 
     @PreAuthorize("permitAll()")
