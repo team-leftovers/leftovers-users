@@ -24,9 +24,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * Temporary controller for easy testing/verification of authentication
- */
 @Slf4j
 @RestController
 @RequestMapping("/auth")
@@ -53,7 +50,7 @@ public class AuthorityController {
     }
 
     @RequestMapping(value = "/logout", produces = {MediaType.APPLICATION_JSON_VALUE}, method = RequestMethod.GET)
-    public ResponseEntity<Map<String, Object>> logout(Authentication authentication)
+    public ResponseEntity<Map<String, Object>> logoutHandler(Authentication authentication)
     {
         jwtUtil.invalidateTokenForUser(authentication.getName());
         return ResponseEntity.ok(Collections.singletonMap("result", "success"));

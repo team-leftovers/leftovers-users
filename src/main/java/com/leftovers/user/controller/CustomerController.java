@@ -8,12 +8,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.net.URI;
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -22,6 +22,7 @@ import java.util.Optional;
 public class CustomerController {
     private final CustomerService customerService;
 
+    @PreAuthorize("hasRole('ROLE_SITE_ADMIN')")
     @RequestMapping(produces = {MediaType.APPLICATION_JSON_VALUE}, method = RequestMethod.GET)
     public ResponseEntity<List<Customer>> getAllCustomers()
     {
@@ -32,22 +33,26 @@ public class CustomerController {
         return ResponseEntity.ok(customers);
     }
 
+    @PreAuthorize("hasRole('ROLE_SITE_ADMIN') || @authorizationService.isCustomer(authentication, #customerId)")
     @RequestMapping(value = "/{customerId}", produces = {MediaType.APPLICATION_JSON_VALUE}, method = RequestMethod.GET)
     public ResponseEntity<Customer> getCustomerById(@PathVariable Long customerId) {
-        return ResponseEntity.of(Optional.ofNullable(customerService.getCustomerById(customerId)));
+        return ResponseEntity.ok(customerService.getCustomerById(customerId));
     }
 
+    @PreAuthorize("hasRole('ROLE_SITE_ADMIN') || @authorizationService.isCustomer(authentication, #customerId)")
     @RequestMapping(value = "/{customerId}", produces = {MediaType.APPLICATION_JSON_VALUE}, method = RequestMethod.PUT)
     public ResponseEntity<Customer> updateCustomerAtId(@PathVariable Long customerId, @Valid @RequestBody UpdateCustomerDto customerDto) {
         var customer = customerService.updateCustomerAtId(customerId, customerDto);
         return ResponseEntity.ok(customer);
     }
 
+    @PreAuthorize("hasRole('ROLE_SITE_ADMIN') || @authorizationService.isCustomer(authentication, #email)")
     @RequestMapping(value = "/email/{email}", produces = {MediaType.APPLICATION_JSON_VALUE}, method = RequestMethod.GET)
     public ResponseEntity<Customer> getCustomerByEmail(@PathVariable String email) {
-        return ResponseEntity.of(Optional.ofNullable(customerService.getCustomerByEmail(email)));
+        return ResponseEntity.ok(customerService.getCustomerByEmail(email));
     }
 
+    @PreAuthorize("permitAll()")
     @RequestMapping(consumes = {MediaType.APPLICATION_JSON_VALUE}, method = RequestMethod.POST)
     public ResponseEntity<Customer> createNewCustomer(@Valid @RequestBody CreateCustomerDto customerDto) {
         var customer = customerService.createNewCustomer(customerDto);
@@ -55,6 +60,7 @@ public class CustomerController {
         return ResponseEntity.created(URI.create("/customers/" + customer.getId())).body(customer);
     }
 
+    @PreAuthorize("hasRole('ROLE_SITE_ADMIN') || @authorizationService.isCustomer(authentication, #customerId)")
     @RequestMapping(value = "/{customerId}", method = RequestMethod.DELETE)
     public ResponseEntity<String> deleteCustomer(@PathVariable Long customerId) {
         customerService.removeCustomerById(customerId);
