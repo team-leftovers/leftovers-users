@@ -53,7 +53,7 @@ public class CustomerController {
         return ResponseEntity.of(Optional.ofNullable(customerService.getCustomerByEmail(email)));
     }
 
-    @PreAuthorize("hasRole('ROLE_SITE_ADMIN')")
+    @PreAuthorize("permitAll()")
     @RequestMapping(consumes = {MediaType.APPLICATION_JSON_VALUE}, method = RequestMethod.POST)
     public ResponseEntity<Customer> createNewCustomer(@Valid @RequestBody CreateCustomerDto customerDto) {
         var customer = customerService.createNewCustomer(customerDto);
