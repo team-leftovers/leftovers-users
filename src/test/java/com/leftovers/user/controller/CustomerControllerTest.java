@@ -51,7 +51,7 @@ class CustomerControllerTest {
                 .id(1L)
                 .latitude(0.0)
                 .longitude(0.0)
-                .zipCode("12345")
+                .zipcode("12345")
                 .city("Test City")
                 .state("TS")
                 .country("US")
@@ -89,7 +89,7 @@ class CustomerControllerTest {
                 .unitNumber(address.getUnitNumber())
                 .city(address.getCity())
                 .state(address.getState())
-                .zipcode(address.getZipCode().toString())
+                .zipcode(address.getZipcode())
                 .build();
 
         validUpdateDto = UpdateCustomerDto.builder()

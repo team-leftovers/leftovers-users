@@ -1,6 +1,7 @@
 package com.leftovers.user.model;
 
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.Hibernate;
 
 import javax.persistence.*;
@@ -9,6 +10,7 @@ import java.util.Objects;
 @Getter
 @Setter
 @ToString
+@SuperBuilder
 @Entity
 @Table(name = "tbl_customer")
 @PrimaryKeyJoinColumn(name = "account_id", referencedColumnName = "id")
@@ -17,14 +19,17 @@ public class Customer extends Account {
     @JoinColumn(name = "address_id", nullable = false, referencedColumnName = "id")
     private Address address;
 
-    @Builder
-    public Customer(Long id, String firstName, String lastName, String email, String phoneNo, String password, Address address) {
-        super(id, firstName, lastName, email, phoneNo, password, AccountType.CUSTOMER);
+    protected Customer(final Customer.CustomerBuilder<?, ?> b) {
+        super(b.type(AccountType.CUSTOMER));
+        this.address = b.address;
+    }
+
+    public Customer(Address address) {
+        this.setType(AccountType.CUSTOMER);
         this.address = address;
     }
 
     public Customer() {
-        super();
         this.setType(AccountType.CUSTOMER);
     }
 

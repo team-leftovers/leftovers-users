@@ -35,6 +35,14 @@ Currently, the Microservice only contains endpoints for creating, querying, and 
 - Returns code 404 on failure to find the customer
 - Returns code 400 when passing an invalid id or invalid JSON body.
 
+## `/login`
+### POST:
+- Takes an email and password and creates a JWT Token for use in authorizing with the other endpoints
+
+## `/logout`
+### GET:
+- Invalidates the JWT Token for the active user, effectively 'logging out'.
+
 Customer JSON:
 ```json
 {

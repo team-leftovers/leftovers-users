@@ -27,7 +27,7 @@ public class Address {
     private Double longitude;
 
     @Column(name = "zip_code", nullable = false, length = 15)
-    private String zipCode;
+    private String zipcode;
 
     @Column(name = "country", nullable = false)
     private String country;
