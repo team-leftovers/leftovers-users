@@ -1,103 +1,69 @@
 package com.leftovers.user.controller;
 
 import com.leftovers.user.dto.CreateCustomerDto;
-import com.leftovers.user.model.Address;
+import com.leftovers.user.dto.UpdateCustomerDto;
 import com.leftovers.user.model.Customer;
-import com.leftovers.user.repository.AddressRepository;
-import com.leftovers.user.repository.CustomerRepository;
+import com.leftovers.user.services.CustomerService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.net.URI;
 import java.util.List;
 
+@Slf4j
 @RestController
-@RequestMapping("/customer")
+@RequestMapping("/customers")
+@RequiredArgsConstructor
 public class CustomerController {
-    private final CustomerRepository customerRepository;
-    private final AddressRepository addressRepository;
+    private final CustomerService customerService;
 
-    public CustomerController(CustomerRepository customerRepository, AddressRepository addressRepository) {
-        this.customerRepository = customerRepository;
-        this.addressRepository = addressRepository;
-    }
-
-    @GetMapping(produces = {MediaType.APPLICATION_JSON_VALUE})
+    @PreAuthorize("hasRole('ROLE_SITE_ADMIN')")
+    @RequestMapping(produces = {MediaType.APPLICATION_JSON_VALUE}, method = RequestMethod.GET)
     public ResponseEntity<List<Customer>> getAllCustomers()
     {
-        var customers = (List<Customer>)customerRepository.findAll();
+        var customers = customerService.getAllCustomers();
         if (customers.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.ok(customers);
     }
 
-    @GetMapping(value = "/{customerId}", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @PreAuthorize("hasRole('ROLE_SITE_ADMIN') || @authorizationService.isCustomer(authentication, #customerId)")
+    @RequestMapping(value = "/{customerId}", produces = {MediaType.APPLICATION_JSON_VALUE}, method = RequestMethod.GET)
     public ResponseEntity<Customer> getCustomerById(@PathVariable Long customerId) {
-        return ResponseEntity.of(customerRepository.findById(customerId));
+        return ResponseEntity.ok(customerService.getCustomerById(customerId));
     }
 
-    @GetMapping(value = "/email/{email}", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @PreAuthorize("hasRole('ROLE_SITE_ADMIN') || @authorizationService.isCustomer(authentication, #customerId)")
+    @RequestMapping(value = "/{customerId}", produces = {MediaType.APPLICATION_JSON_VALUE}, method = RequestMethod.PUT)
+    public ResponseEntity<Customer> updateCustomerAtId(@PathVariable Long customerId, @Valid @RequestBody UpdateCustomerDto customerDto) {
+        var customer = customerService.updateCustomerAtId(customerId, customerDto);
+        return ResponseEntity.ok(customer);
+    }
+
+    @PreAuthorize("hasRole('ROLE_SITE_ADMIN') || @authorizationService.isCustomer(authentication, #email)")
+    @RequestMapping(value = "/email/{email}", produces = {MediaType.APPLICATION_JSON_VALUE}, method = RequestMethod.GET)
     public ResponseEntity<Customer> getCustomerByEmail(@PathVariable String email) {
-        return ResponseEntity.of(customerRepository.findByEmail(email));
+        return ResponseEntity.ok(customerService.getCustomerByEmail(email));
     }
 
-    @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE})
+    @PreAuthorize("permitAll()")
+    @RequestMapping(consumes = {MediaType.APPLICATION_JSON_VALUE}, method = RequestMethod.POST)
     public ResponseEntity<Customer> createNewCustomer(@Valid @RequestBody CreateCustomerDto customerDto) {
-        // Verify email isn't already registered
-        customerRepository.findByEmail(customerDto.email)
-                .ifPresent(c -> {
-                    throw new RuntimeException("Email is already registered");
-                });
+        var customer = customerService.createNewCustomer(customerDto);
 
-        var address = new Address();
-
-        // TODO(Jordan):
-        //  Latitude and Longitude calculations
-        //  (might be worth removing these values altogether, we'll see)
-        address.setLatitude(0.0);
-        address.setLongitude(0.0);
-
-        // TODO(Jordan):
-        //  Update Database to allow for extended zipcodes (#####-####)
-        address.setZipCode(Integer.parseInt(customerDto.zipcode));
-
-        // TODO(Jordan):
-        //  Right now we only support The US
-        address.setCountry("US");
-
-        // TODO(Jordan):
-        //  Ask team about state handling
-        // address.setState(customerDto.state);
-
-        if (customerDto.houseNumber != null && !customerDto.houseNumber.isBlank())
-            address.setHouseNumber(customerDto.houseNumber);
-
-        if (customerDto.unitNumber != null && !customerDto.unitNumber.isBlank())
-            address.setUnitNumber(customerDto.unitNumber);
-
-        address.setStreetAddress(customerDto.addressLine);
-
-        var customer = new Customer(addressRepository.save(address));
-        customer.setFirstName(customerDto.firstName);
-        customer.setLastName(customerDto.lastName);
-        customer.setEmail(customerDto.email);
-        customer.setHashedPassword(customerDto.password);
-        customer.setPhoneNo(customerDto.phoneNo);
-
-        var newCustomer = customerRepository.save(customer);
-
-        return ResponseEntity.created(URI.create("/customer/" + newCustomer.getId())).body(newCustomer);
+        return ResponseEntity.created(URI.create("/customers/" + customer.getId())).body(customer);
     }
 
-    @DeleteMapping("/{customerId}")
+    @PreAuthorize("hasRole('ROLE_SITE_ADMIN') || @authorizationService.isCustomer(authentication, #customerId)")
+    @RequestMapping(value = "/{customerId}", method = RequestMethod.DELETE)
     public ResponseEntity<String> deleteCustomer(@PathVariable Long customerId) {
-        customerRepository.findById(customerId).ifPresent(c -> {
-            customerRepository.delete(c);
-            addressRepository.delete(c.getAddress());
-        });
+        customerService.removeCustomerById(customerId);
         return ResponseEntity.noContent().build();
     }
 }
