@@ -62,6 +62,9 @@ public class AuthorityController {
         authManager.authenticate(authInputToken);
         String token = jwtUtil.generateToken(body.getEmail());
 
-        return ResponseEntity.ok(Collections.singletonMap("jwt-token", token));
+        return ResponseEntity
+                .status(200)
+                .header("AccessToken", token)
+                .body(Collections.singletonMap("status", "success"));
     }
 }
