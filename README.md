@@ -3,7 +3,7 @@ Users Microservice
 This microservice will contain the required endpoints and database connections to create accounts of varying types, such as Customers, Web Admins, Restaurant Admins, and Drivers.
 Currently, the Microservice only contains endpoints for creating, querying, and deleting customer accounts, which results in the following endpoints:
 
-## `/customer`
+## `/customers`
 ### GET:
 - Returns a JSON list of customers (defined at the bottom of this document)
 - If no customers have been registered, the endpoint will return code 204 (No Content), on browsers this will result in the current page not being changed, this is intended behaviour
@@ -14,14 +14,14 @@ Currently, the Microservice only contains endpoints for creating, querying, and 
 - On duplicate email, returns code 409
 - On invalid JSON, returns code 400
 
-## `/customer/email/{email}`
+## `/customers/email/{email}`
 ### GET:
 - Searches for and returns a customer based on a passed in {email}.
 - Returns code 200 and the JSON representation of the customer (defined at the bottom of this document) on success
 - Returns code 404 on failure to find the customer
 - Returns code 400 when passing an invalid email or no email
 
-## `/customer/{customerId}`
+## `/customers/{customerId}`
 ### GET:
 - Ditto for the /customer/email/{email} endpoint but instead searching based on a customer id.
 
@@ -35,11 +35,11 @@ Currently, the Microservice only contains endpoints for creating, querying, and 
 - Returns code 404 on failure to find the customer
 - Returns code 400 when passing an invalid id or invalid JSON body.
 
-## `/login`
+## `/auth/login`
 ### POST:
 - Takes an email and password and creates a JWT Token for use in authorizing with the other endpoints
 
-## `/logout`
+## `/auth/logout`
 ### GET:
 - Invalidates the JWT Token for the active user, effectively 'logging out'.
 
