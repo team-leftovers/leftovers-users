@@ -32,6 +32,13 @@ public class ControllerExceptionAdvisor {
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(InvalidAdminEmailException.class)
+    public Map<String, Object> handleInvalidAdminEmailException(InvalidAdminEmailException ex) {
+        log.error(ex.getMessage());
+        return makeResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public Map<String, Object> handleValidationExceptions(MethodArgumentNotValidException ex) {
         log.error(ex.getMessage());

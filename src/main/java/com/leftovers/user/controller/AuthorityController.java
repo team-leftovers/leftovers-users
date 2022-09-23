@@ -1,6 +1,7 @@
 package com.leftovers.user.controller;
 
 import com.leftovers.user.dto.LoginCredentialsDto;
+import com.leftovers.user.dto.LoginResponseDto;
 import com.leftovers.user.model.Account;
 import com.leftovers.user.model.AccountType;
 import com.leftovers.user.security.JWTUtil;
@@ -14,6 +15,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -57,14 +59,20 @@ public class AuthorityController {
     }
 
     @RequestMapping(value = "/login", produces = {MediaType.APPLICATION_JSON_VALUE}, method = RequestMethod.POST)
-    public ResponseEntity<Map<String, Object>> loginHandler(@RequestBody LoginCredentialsDto body) {
+    public ResponseEntity<LoginResponseDto> loginHandler(@RequestBody LoginCredentialsDto body) {
         UsernamePasswordAuthenticationToken authInputToken = new UsernamePasswordAuthenticationToken(body.getEmail(), body.getPassword());
-        authManager.authenticate(authInputToken);
+        var authentication = authManager.authenticate(authInputToken);
         String token = jwtUtil.generateToken(body.getEmail());
+
+        Account account = accountService.getAccountByEmail(body.getEmail());
 
         return ResponseEntity
                 .status(200)
                 .header("AccessToken", token)
-                .body(Collections.singletonMap("status", "success"));
+                .body(
+                        LoginResponseDto.builder()
+                                .id(account.getId())
+                                .roles(authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()))
+                                .build());
     }
 }
