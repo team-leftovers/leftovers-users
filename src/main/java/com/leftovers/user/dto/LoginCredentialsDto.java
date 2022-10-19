@@ -9,4 +9,5 @@ import lombok.*;
 public class LoginCredentialsDto {
     private String email;
     private String password;
+    private String type;
 }

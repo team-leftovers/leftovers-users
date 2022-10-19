@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -65,7 +66,11 @@ public class AuthorityController {
         String token = jwtUtil.generateToken(body.getEmail());
 
         Account account = accountService.getAccountByEmail(body.getEmail());
-
+        if (!Objects.equals(body.getType() , account.getType().toString())) {
+            return ResponseEntity
+                    .status(403)
+                    .body(new LoginResponseDto());
+        }
         return ResponseEntity
                 .status(200)
                 .header("AccessToken", token)
